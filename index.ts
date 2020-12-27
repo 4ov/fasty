@@ -44,7 +44,9 @@ export default class Server{
        }
        if(typeof path == 'string' && (path as string).match(/\{(.*)\}/)){
             params = (path as string).match(/\{(.*)\}/)?.slice(1)
-            path = new RegExp(path.replaceAll(/\{(.*?)\}/g, '(.*?)'))
+            console.log(params);
+            
+            path = new RegExp(path.replaceAll(/\{(.*?)\}/g, '(.*)'))
        }
         return<HttpRule>{
             method,
@@ -61,7 +63,7 @@ export default class Server{
         }
         if(typeof path == 'string' && (path as string).match(/\{(.*)\}/)){
              params = (path as string).match(/\{(.*)\}/)?.slice(1)
-            path = new RegExp(path.replaceAll(/\{(.*?)\}/g, '(.*?)'))
+            path = new RegExp(path.replaceAll(/\{(.*?)\}/g, '(.*)'))
         }
          return<HttpMiddleware>{
              path,
@@ -74,23 +76,25 @@ export default class Server{
         this.rules.push(this.generateRule('GET', path, callbacks))
     }
     
+    all(path : string | RegExp, ...callbacks : Callback[]){
+        this.rules.push(this.generateRule('ALL', path, callbacks))
+    }
+    
     post(path : string | RegExp, ...callbacks : Callback[]){
         this.rules.push(this.generateRule('POST', path, callbacks))
     }
 
 
     handle(req : ServerRequest){
-        let tries = 0
         const url = urlParse(`${req.headers.get('proto') || 'http'}://${req.headers.get('host')}${req.url}`)
         //generate middleware system
         
 
         if(!this.rules.some(rule=>{
-            if(rule.method == req.method && (rule.path as any).equal(url.pathname).match){
-                console.log(rule);
-                
+            if((rule.method == req.method || rule.method == 'ALL') && (rule.path as any).equal(url.pathname).match){                
                 const params : any = {}
                 rule.params?.map((r, i)=>{
+                    
                     params[r] = (rule.path as any).equal(url.pathname).result.slice(1)[i]
                 })
                 const Req = new Request(req, {
@@ -104,7 +108,7 @@ export default class Server{
 
                 const MW = new Middleware(Req, Res)
                 this.middlewares.forEach(mid=>{  
-                    if((mid.path as any).equal(url.pathname) || mid.path == null){
+                    if((mid.path as any)?.equal?.(url.pathname) || mid.path == null){
                         mid.callbacks.forEach(cb=>MW.use(cb))
                     }
                 })

@@ -2,7 +2,7 @@ import Request from "./request.ts"
 import Response from "./response.ts"
 
 
-export type HttpMethods = 'GET' | 'POST' | 'DELETE' | 'HEAD' | 'PATCH'
+export type HttpMethods = 'GET' | 'POST' | 'DELETE' | 'HEAD' | 'PATCH' | 'ALL'
 
 export type Callback = (req : Request, res : Response, next? : any)=>unknown
 
